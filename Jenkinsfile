@@ -16,43 +16,21 @@ pipeline {
         checkout scm
       }
     }
-    stage('Run Remote Deploy (debug)') {
+    stage('Run Remote Deploy') {
         steps {
             withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_PAT')]) {
                 sshagent (credentials: [env.SSH_CRED_ID]) {
-                    sh """
-#!/usr/bin/env bash
-set -euxo pipefail
-echo "== Jenkins env =="
-env | sort | sed -n '1,15p'
-
-echo "== Test SSH connectivity =="
-ssh -vvv -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'echo connected: \$(hostname) as \$(whoami)'
-
-echo "== Push script via scp =="
-scp -v -o StrictHostKeyChecking=no scripts/deploy_remote.sh ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy_remote.sh
-
-echo "== Run on remote =="
-ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'bash -s' <<EOF
-set -euxo pipefail
-echo "remote whoami: \$(whoami)"
-echo "remote which bash: \$(which bash)"
-echo "remote git version: \$(git --version || echo no-git)"
-
-DEPLOY_DIR="${DEPLOY_DIR}"
-REPO_URL="${REPO_URL}"
-BRANCH="${BRANCH}"
-
-echo "DEPLOY_DIR=\${DEPLOY_DIR}  REPO_URL=\${REPO_URL}  BRANCH=\${BRANCH}"
-mkdir -p "\${DEPLOY_DIR}"
-cd "\${DEPLOY_DIR}"
-
-head -n1 /tmp/deploy_remote.sh || true
-chmod +x /tmp/deploy_remote.sh
-/tmp/deploy_remote.sh
-echo "script exit code: \$?"
-EOF
-                    """
+                    sh '''
+                        set -e
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "
+                            mkdir -p ${DEPLOY_DIR}
+                            curl -H 'Authorization: token ${GITHUB_PAT}' -fsSL \
+                                 https://raw.githubusercontent.com/dltnals1210/mysite/${BRANCH}/scripts/deploy_remote.sh \
+                                 -o /tmp/deploy_remote.sh &&
+                            chmod +x /tmp/deploy_remote.sh &&
+                            /tmp/deploy_remote.sh
+                        "
+                    '''
                 }
             }
         }
