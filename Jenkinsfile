@@ -18,20 +18,15 @@ pipeline {
     }
     stage('Run Remote Deploy') {
         steps {
-            withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_PAT')]) {
-                sshagent (credentials: [env.SSH_CRED_ID]) {
-                    sh '''
-                        set -e
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "
-                            mkdir -p ${DEPLOY_DIR}
-                            curl -H 'Authorization: token ${GITHUB_PAT}' -fsSL \
-                                 https://raw.githubusercontent.com/dltnals1210/mysite/${BRANCH}/scripts/deploy_remote.sh \
-                                 -o /tmp/deploy_remote.sh &&
-                            chmod +x /tmp/deploy_remote.sh &&
-                            /tmp/deploy_remote.sh
-                        "
-                    '''
-                }
+            sshagent (credentials: [SSH_CRED_ID]) {
+                sh """
+                    scp -o StrictHostKeyChecking=no scripts/deploy_remote.sh ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy_remote.sh
+                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'bash -s' <<'EOF'
+set -euo pipefail
+chmod +x /tmp/deploy_remote.sh
+bash /tmp/deploy_remote.sh
+EOF
+                """
             }
         }
     }
