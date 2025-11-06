@@ -20,19 +20,21 @@ pipeline {
         steps {
             withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_PAT')]) {
                 sshagent (credentials: [env.SSH_CRED_ID]) {
-                    sh """
-                        set -euxo pipefail
-                        echo "== Jenkins env =="
-                        env | sort | sed -n '1,15p'
+                    sh(
+                        shell: '/bin/bash',
+                        script: """
+                            set -euxo pipefail
+                            echo "== Jenkins env =="
+                            env | sort | sed -n '1,15p'
 
-                        echo "== Test SSH connectivity =="
-                        ssh -vvv -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'echo connected: \$(hostname) as \$(whoami)'
+                            echo "== Test SSH connectivity =="
+                            ssh -vvv -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'echo connected: \$(hostname) as \$(whoami)'
 
-                        echo "== Push script via scp =="
-                        scp -v -o StrictHostKeyChecking=no scripts/deploy_remote.sh ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy_remote.sh
+                            echo "== Push script via scp =="
+                            scp -v -o StrictHostKeyChecking=no scripts/deploy_remote.sh ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy_remote.sh
 
-                        echo "== Run on remote =="
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'bash -s' <<EOF
+                            echo "== Run on remote =="
+                            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'bash -s' <<EOF
 set -euxo pipefail
 echo "remote whoami: \$(whoami)"
 echo "remote which bash: \$(which bash)"
@@ -51,7 +53,8 @@ chmod +x /tmp/deploy_remote.sh
 /tmp/deploy_remote.sh
 echo "script exit code: \$?"
 EOF
-                    """
+                        """
+                    )
                 }
             }
         }
