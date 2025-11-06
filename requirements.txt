@@ -1,0 +1,6 @@
+Django>=4.0
+python-dotenv
+# DB 드라이버(사용 DB에 따라)
+# psycopg2-binary
+# mysqlclient
+
