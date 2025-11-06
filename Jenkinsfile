@@ -18,14 +18,16 @@ pipeline {
     }
     stage('Run Remote Deploy') {
       steps {
-        withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_PAT')]) {
-          sshagent (credentials: [SSH_CRED_ID]) {
-            sh '''
-              set -e
-              scp -o StrictHostKeyChecking=no scripts/deploy_remote.sh ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy_remote.sh
-              ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "GITHUB_PAT=${GITHUB_PAT} DEPLOY_DIR='${DEPLOY_DIR}' REPO_URL='https://github.com/dltnals1210/mysite.git' BRANCH='${BRANCH}' bash -lc 'chmod +x /tmp/deploy_remote.sh && /tmp/deploy_remote.sh'"
-            '''
-          }
+        sshagent (credentials: [SSH_CRED_ID]) {
+          sh '''
+            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
+              set -euo pipefail
+              curl -fSLo /tmp/deploy_remote.sh \
+                https://raw.githubusercontent.com/dltnals1210/mysite/main/scripts/deploy_remote.sh
+              chmod +x /tmp/deploy_remote.sh
+              bash /tmp/deploy_remote.sh
+            '
+          '''
         }
       }
     }
