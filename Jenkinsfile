@@ -42,13 +42,14 @@ DEPLOY_DIR="${DEPLOY_DIR}"
 REPO_URL="${REPO_URL}"
 BRANCH="${BRANCH}"
 
-echo "DEPLOY_DIR=\\${DEPLOY_DIR}  REPO_URL=\\${REPO_URL}  BRANCH=\\${BRANCH}"
-mkdir -p "\\${DEPLOY_DIR}"
+echo "DEPLOY_DIR=\${DEPLOY_DIR}  REPO_URL=\${REPO_URL}  BRANCH=\${BRANCH}"
+mkdir -p "\${DEPLOY_DIR}"
+cd "\${DEPLOY_DIR}"
 
 head -n1 /tmp/deploy_remote.sh || true
 chmod +x /tmp/deploy_remote.sh
 /tmp/deploy_remote.sh
-echo "script exit code: \\$?"
+echo "script exit code: \$?"
 EOF
                     """
                 }
