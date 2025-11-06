@@ -28,9 +28,9 @@ pip install -r requirements.txt
 # cp /home/vagrant/.env.production .env || true
 
 # 5) 장고 작업
-python3 manage.py migrate --noinput
-python3 manage.py makemigrations --noinput
-python3 manage.py migrate --noinput
+python3 manage.py migrate --noinput --settings=config.settings.local
+python3 manage.py makemigrations --noinput --settings=config.settings.local
+python3 manage.py migrate --noinput --settings=config.settings.local
 python3 manage.py collectstatic --noinput --settings=mysite.settings.local
 
 # 6) 기존 runserver 종료 (비정상적인 경우도 있으므로 pkill로 처리)
