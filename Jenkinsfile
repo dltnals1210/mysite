@@ -17,27 +17,17 @@ pipeline {
       }
     }
     stage('Run Remote Deploy') {
-        steps {
-            withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_PAT')]) {
-                sshagent (credentials: [SSH_CRED_ID]) {
-                    sh """
-                        set -e
-                        # 스크립트 전달
-                        scp -o StrictHostKeyChecking=no scripts/deploy_remote.sh ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy_remote.sh
-                        # 원격에서 환경변수 전달 + 실행
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'bash -s' <<EOF
-set -e
-export DEPLOY_DIR="${DEPLOY_DIR}"
-export BRANCH="${BRANCH}"
-export REPO_URL="https://github.com/dltnals1210/mysite.git"
-export GITHUB_PAT="${GITHUB_PAT}"
-chmod +x /tmp/deploy_remote.sh
-bash /tmp/deploy_remote.sh
-EOF
-                    """
-                }
-            }
+      steps {
+        withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_PAT')]) {
+          sshagent (credentials: [SSH_CRED_ID]) {
+            sh '''
+              set -e
+              scp -o StrictHostKeyChecking=no scripts/deploy_remote.sh ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/deploy_remote.sh
+              ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "GITHUB_PAT=${GITHUB_PAT} DEPLOY_DIR='${DEPLOY_DIR}' REPO_URL='https://github.com/dltnals1210/mysite.git' BRANCH='${BRANCH}' bash -lc 'chmod +x /tmp/deploy_remote.sh && /tmp/deploy_remote.sh'"
+            '''
+          }
         }
+      }
     }
 
   }
