@@ -36,7 +36,9 @@ python3 manage.py collectstatic --noinput --settings=config.settings.local
 # 6) 기존 runserver 종료 (비정상적인 경우도 있으므로 pkill로 처리)
 pkill -f "manage.py runserver" || true
 # 7) runserver 백그라운드 실행, 로그는 /var/log/pybo_run.log
-nohup python3 manage.py runserver 0.0.0.0:8000 > /var/log/pybo_run.log 2>&1 &
+mkdir -p "$PROJECT_DIR/logs"
+nohup "$PROJECT_DIR/venv/bin/python" manage.py runserver 0.0.0.0:8000 \
+  > "$PROJECT_DIR/logs/runserver.log" 2>&1 &
 
 echo "DEPLOY_OK $(date)"
 
